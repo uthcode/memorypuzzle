@@ -26,6 +26,10 @@ ALLCOLORS = (RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, CYAN)
 ALLSHAPES = (DONUT, SQUARE, DIAMOND, LINES, OVAL)
 
 
+def get_fpsclock_displaysurface():
+    return pygame.time.Clock(), \
+           pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+
 def main():
     """Run the Memory Puzzle Game."""
     assert (BOARDWIDTH * BOARDHEIGHT) % 2 == 0, \
@@ -34,12 +38,11 @@ def main():
         "Board is too big for the number of shapes/colors defined."
 
     pygame.init()
-    fps_clock = pygame.time.Clock()
-    display_surface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+    pygame.display.set_caption("Memory Game")
+    fps_clock, display_surface = get_fpsclock_displaysurface()
 
     mouse_xpos = 0  # used to store the x coordinate of the mouse event
     mouse_ypos = 0  # used to store the y coordinate of the mouse event
-    pygame.display.set_caption("Memory Game")
 
     mainboard = get_randomized_board()
     revealed_boxes = generate_revealed_boxes_data(False)

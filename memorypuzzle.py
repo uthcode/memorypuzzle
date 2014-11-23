@@ -1,7 +1,19 @@
+"""
+Memory Puzzle Game.
+
+This is a small memory puzzle game, where blocks of similar images will be shown
+and you will be asked to guess, which boxes contained similar images.
+
+Original Author: Al Sweigart al@inventwithpython.com
+
+This program was written by Senthil Kumaran <senthil@uthcode.com>
+"""
 import random
+import sys
+
 import pygame
 from pygame.constants import QUIT, KEYUP, K_ESCAPE, MOUSEMOTION, MOUSEBUTTONUP
-import sys
+
 
 __author__ = 'skumaran'
 

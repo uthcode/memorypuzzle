@@ -14,7 +14,7 @@ import pygame
 from pygame.constants import QUIT, KEYUP, K_ESCAPE, MOUSEMOTION, MOUSEBUTTONUP
 
 from constants import (
-    BOARDHEIGHT, BOARDWIDTH, BOXSIZE, FPS, GAPSIZE, REVEALSPEED, WINDOWHEIGHT,
+    GAME_ROWS, GAME_COLS, BOXSIZE, FPS, GAPSIZE, REVEALSPEED, WINDOWHEIGHT,
     WINDOWWIDTH, XMARGIN, YMARGIN)
 from colors import (
     BGCOLOR, RED, GREEN, YELLOW, BLUE, ORANGE, PURPLE, CYAN, LIGHTBGCOLOR,
@@ -136,8 +136,8 @@ def main():
 def generate_revealed_boxes_data(val):
     """Generate Revealed Boxes Data."""
     revealed_boxes = []
-    for _ in range(BOARDWIDTH):
-        revealed_boxes.append([val] * BOARDHEIGHT)
+    for _ in range(GAME_COLS):
+        revealed_boxes.append([val] * GAME_ROWS)
     return revealed_boxes
 
 
@@ -146,17 +146,16 @@ def get_randomized_board():
     # Get a list of every possible shape in every possible color.
     icons = [(shape, color) for shape in ALLSHAPES for color in ALLCOLORS]
     random.shuffle(icons)
-    num_icons_used = int(BOARDHEIGHT * BOARDWIDTH / 2)
+    num_icons_used = int(GAME_ROWS * GAME_COLS / 2)
     icons = icons[:num_icons_used] * 2
     random.shuffle(icons)
 
     # Create a board data structure with randomly placed icons
     board = []
-    for _ in range(BOARDWIDTH):
+    for _ in range(GAME_COLS):
         column = []
-        for _ in range(BOARDHEIGHT):
-            column.append(icons[0])
-            del icons[0]
+        for _ in range(GAME_ROWS):
+            column.append(icons.pop(0))
         board.append(column)
     return board
 
@@ -178,8 +177,8 @@ def left_top_coords_of_box(boxx, boxy):
 
 def get_box_at_pixel(mouse_xpos, mouse_ypos):
     """Get the Box at a Pixel."""
-    for boxx in range(BOARDWIDTH):
-        for boxy in range(BOARDHEIGHT):
+    for boxx in range(GAME_COLS):
+        for boxy in range(GAME_ROWS):
             left, top = left_top_coords_of_box(boxx, boxy)
             box_rect = pygame.Rect(left, top, BOXSIZE, BOXSIZE)
             if box_rect.collidepoint(mouse_xpos, mouse_ypos):
@@ -259,8 +258,8 @@ def cover_boxes_animation(display_surface, fps_clock, board, boxes_to_cover):
 def draw_board(display_surface, board, revealed):
     """Draw the Board."""
     # Draws all of the boxes in their covered or revealed state
-    for boxx in range(BOARDWIDTH):
-        for boxy in range(BOARDHEIGHT):
+    for boxx in range(GAME_COLS):
+        for boxy in range(GAME_ROWS):
             left, top = left_top_coords_of_box(boxx, boxy)
             if not revealed[boxx][boxy]:
                 # Draw a covered Box
@@ -282,8 +281,8 @@ def start_game_animation(display_surface, fps_clock, board):
     """Randomly reveal the boxes 8 at a time."""
     covered_boxes = generate_revealed_boxes_data(False)
     boxes = []
-    for boxx in range(BOARDWIDTH):
-        for boxy in range(BOARDHEIGHT):
+    for boxx in range(GAME_COLS):
+        for boxy in range(GAME_ROWS):
             boxes.append((boxx, boxy))
     random.shuffle(boxes)
     box_groups = split_into_groups_of(8, boxes)

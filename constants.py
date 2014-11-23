@@ -1,10 +1,7 @@
 """Constants used by the Memory Puzzle Game."""
 
-# number of rows of icons
-BOARDHEIGHT = 7
-
-# number of columns of icons
-BOARDWIDTH = 10
+GAME_ROWS = 7
+GAME_COLS = 10
 
 # size of box height and width in pixels
 BOXSIZE = 40
@@ -24,5 +21,5 @@ WINDOWHEIGHT = 480
 # size of window's width in pixels
 WINDOWWIDTH = 640
 
-XMARGIN = int((WINDOWWIDTH - (BOARDWIDTH * (BOXSIZE + GAPSIZE))) / 2)
-YMARGIN = int((WINDOWHEIGHT - (BOARDHEIGHT * (BOXSIZE + GAPSIZE))) / 2)
+XMARGIN = int((WINDOWWIDTH - (GAME_COLS * (BOXSIZE + GAPSIZE))) / 2)
+YMARGIN = int((WINDOWHEIGHT - (GAME_ROWS * (BOXSIZE + GAPSIZE))) / 2)

@@ -7,53 +7,75 @@ Adapted from the original game written by Al Sweigart al@inventwithpython.com
 
 @author: Senthil Kumaran <senthil@uthcode.com>
 """
-from constants import (BOARDHEIGHT, BOARDWIDTH, BOXSIZE, FPS, GAPSIZE,
-                       REVEALSPEED, WINDOWHEIGHT, WINDOWWIDTH)
-from colors import (BGCOLOR, RED, GREEN, YELLOW, BLUE, ORANGE, PURPLE, CYAN,
-                    LIGHTBGCOLOR, BOXCOLOR, HIGHLIGHTCOLOR)
-from shapes import (DONUT, SQUARE, DIAMOND, LINES, OVAL)
-
 import random
 import sys
 
 import pygame
 from pygame.constants import QUIT, KEYUP, K_ESCAPE, MOUSEMOTION, MOUSEBUTTONUP
 
-XMARGIN = int((WINDOWWIDTH - (BOARDWIDTH * (BOXSIZE + GAPSIZE))) / 2)
-YMARGIN = int((WINDOWHEIGHT - (BOARDHEIGHT * (BOXSIZE + GAPSIZE))) / 2)
+from constants import (
+    BOARDHEIGHT, BOARDWIDTH, BOXSIZE, FPS, GAPSIZE, REVEALSPEED, WINDOWHEIGHT,
+    WINDOWWIDTH, XMARGIN, YMARGIN)
+from colors import (
+    BGCOLOR, RED, GREEN, YELLOW, BLUE, ORANGE, PURPLE, CYAN, LIGHTBGCOLOR,
+    BOXCOLOR, HIGHLIGHTCOLOR)
+from shapes import (DONUT, SQUARE, DIAMOND, LINES, OVAL)
+
 
 ALLCOLORS = (RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, CYAN)
 ALLSHAPES = (DONUT, SQUARE, DIAMOND, LINES, OVAL)
 
 
 def get_fpsclock_displaysurface():
+    """Get the Frames per second clock and Display Surface."""
     return pygame.time.Clock(), \
            pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
 
-def game_loop(display_surface,fps_clock, mainboard):
+
+def game_won(display_surface, fps_clock, mainboard):
+    """Won the game."""
+    game_won_animation(display_surface, mainboard)
+    pygame.time.wait(2000)
+    # Reset the board
+    mainboard = get_randomized_board()
+    revealed_boxes = generate_revealed_boxes_data(False)
+    # Show the fully unrevealed board for a second
+    draw_board(display_surface, mainboard, revealed_boxes)
+    pygame.display.update()
+    pygame.time.wait(1000)
+    # Replay the start game animation
+    start_game_animation(display_surface,
+                         fps_clock,
+                         mainboard)
+    return mainboard, revealed_boxes
+
+
+def get_mouse_click():
+    mouse_clicked = False
     mouse_xpos = 0  # used to store the x coordinate of the mouse event
     mouse_ypos = 0  # used to store the y coordinate of the mouse event
+    for event in pygame.event.get():  # event handling loop
+        if (event.type == QUIT or
+                (event.type == KEYUP and event.key == K_ESCAPE)):
+            pygame.quit()
+            sys.exit()
+        elif event.type == MOUSEMOTION:
+            mouse_xpos, mouse_ypos = event.pos
+        elif event.type == MOUSEBUTTONUP:
+            mouse_xpos, mouse_ypos = event.pos
+            mouse_clicked = True
+    return mouse_clicked, mouse_xpos, mouse_ypos
 
+
+def game_loop(display_surface, fps_clock, mainboard):
+    """The main loop of the game."""
     revealed_boxes = generate_revealed_boxes_data(False)
-
     first_selection = None
 
     while True:
-        mouse_clicked = False
         display_surface.fill(BGCOLOR)
         draw_board(display_surface, mainboard, revealed_boxes)
-
-        for event in pygame.event.get():  # event handling loop
-            if (event.type == QUIT or
-                    (event.type == KEYUP and event.key == K_ESCAPE)):
-                pygame.quit()
-                sys.exit()
-            elif event.type == MOUSEMOTION:
-                mouse_xpos, mouse_ypos = event.pos
-            elif event.type == MOUSEBUTTONUP:
-                mouse_xpos, mouse_ypos = event.pos
-                mouse_clicked = True
-
+        mouse_clicked, mouse_xpos, mouse_ypos = get_mouse_click()
         boxx, boxy = get_box_at_pixel(mouse_xpos, mouse_ypos)
         if boxx is not None and boxy is not None:
             # The mouse is currently over the box
@@ -89,25 +111,12 @@ def game_loop(display_surface,fps_clock, mainboard):
                         revealed_boxes[first_selection[0]][
                             first_selection[1]] = False
                         revealed_boxes[boxx][boxy] = False
-                    elif has_won(revealed_boxes):  # check if all pairs found.
-                        game_won_animation(display_surface, mainboard)
-                        pygame.time.wait(2000)
-
-                        # Reset the board
-                        mainboard = get_randomized_board()
-                        revealed_boxes = generate_revealed_boxes_data(False)
-
-                        # Show the fully unrevealed board for a second
-                        draw_board(display_surface, mainboard, revealed_boxes)
-                        pygame.display.update()
-                        pygame.time.wait(1000)
-
-                        # Replay the start game animation
-                        start_game_animation(display_surface,
-                                             fps_clock,
-                                             mainboard)
+                    elif has_won(revealed_boxes):
+                        # check if all pairs found.
+                        mainboard, revealed_boxes = game_won(display_surface,
+                                                             fps_clock,
+                                                             mainboard)
                     first_selection = None
-
         # Redraw the screen and wait for the clock tick
         pygame.display.update()
         fps_clock.tick(FPS)
@@ -115,11 +124,6 @@ def game_loop(display_surface,fps_clock, mainboard):
 
 def main():
     """Run the Memory Puzzle Game."""
-    assert (BOARDWIDTH * BOARDHEIGHT) % 2 == 0, \
-        "Board needs to have even number of boxes for pairs of matches."
-    assert len(ALLCOLORS) * len(ALLSHAPES) * 2 >= BOARDHEIGHT * BOARDWIDTH, \
-        "Board is too big for the number of shapes/colors defined."
-
     pygame.init()
     pygame.display.set_caption("Memory Game")
     fps_clock, display_surface = get_fpsclock_displaysurface()
@@ -140,10 +144,7 @@ def generate_revealed_boxes_data(val):
 def get_randomized_board():
     """Get the Randomized Board."""
     # Get a list of every possible shape in every possible color.
-    icons = []
-    for color in ALLCOLORS:
-        for shape in ALLSHAPES:
-            icons.append((shape, color))
+    icons = [(shape, color) for shape in ALLSHAPES for color in ALLCOLORS]
     random.shuffle(icons)
     num_icons_used = int(BOARDHEIGHT * BOARDWIDTH / 2)
     icons = icons[:num_icons_used] * 2

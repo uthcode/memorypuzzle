@@ -3,6 +3,7 @@ import unittest
 from constants import (
     BOARDHEIGHT, BOARDWIDTH, BOXSIZE, FPS, GAPSIZE, REVEALSPEED, WINDOWHEIGHT,
     WINDOWWIDTH)
+from memorypuzzle import ALLCOLORS, ALLSHAPES
 
 
 class TestColors(unittest.TestCase):
@@ -17,6 +18,11 @@ class TestColors(unittest.TestCase):
         self.assertTrue(WINDOWWIDTH > 0)
 
     def test_even_pairs(self):
-        self.assertEquals(BOARDWIDTH * BOARDHEIGHT % 2, 0,
-                          "Board needs to have even number of boxes"
-                          "for pairs of matches.")
+        self.assertEqual(BOARDWIDTH * BOARDHEIGHT % 2, 0,
+                         "Board needs to have even number of boxes"
+                         "for pairs of matches.")
+
+    def test_color_shape_ratio(self):
+        self.assertTrue(
+            len(ALLCOLORS) * len(ALLSHAPES) * 2 >= BOARDWIDTH * BOARDHEIGHT,
+            "Board is too big for the number of shapes/colors defined.")

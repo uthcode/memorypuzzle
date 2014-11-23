@@ -30,27 +30,13 @@ def get_fpsclock_displaysurface():
     return pygame.time.Clock(), \
            pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
 
-def main():
-    """Run the Memory Puzzle Game."""
-    assert (BOARDWIDTH * BOARDHEIGHT) % 2 == 0, \
-        "Board needs to have even number of boxes for pairs of matches."
-    assert len(ALLCOLORS) * len(ALLSHAPES) * 2 >= BOARDHEIGHT * BOARDWIDTH, \
-        "Board is too big for the number of shapes/colors defined."
-
-    pygame.init()
-    pygame.display.set_caption("Memory Game")
-    fps_clock, display_surface = get_fpsclock_displaysurface()
-
+def game_loop(display_surface,fps_clock, mainboard):
     mouse_xpos = 0  # used to store the x coordinate of the mouse event
     mouse_ypos = 0  # used to store the y coordinate of the mouse event
 
-    mainboard = get_randomized_board()
     revealed_boxes = generate_revealed_boxes_data(False)
 
     first_selection = None
-
-    display_surface.fill(BGCOLOR)
-    start_game_animation(display_surface, fps_clock, mainboard)
 
     while True:
         mouse_clicked = False
@@ -125,6 +111,22 @@ def main():
         # Redraw the screen and wait for the clock tick
         pygame.display.update()
         fps_clock.tick(FPS)
+
+
+def main():
+    """Run the Memory Puzzle Game."""
+    assert (BOARDWIDTH * BOARDHEIGHT) % 2 == 0, \
+        "Board needs to have even number of boxes for pairs of matches."
+    assert len(ALLCOLORS) * len(ALLSHAPES) * 2 >= BOARDHEIGHT * BOARDWIDTH, \
+        "Board is too big for the number of shapes/colors defined."
+
+    pygame.init()
+    pygame.display.set_caption("Memory Game")
+    fps_clock, display_surface = get_fpsclock_displaysurface()
+    mainboard = get_randomized_board()
+    display_surface.fill(BGCOLOR)
+    start_game_animation(display_surface, fps_clock, mainboard)
+    game_loop(display_surface, fps_clock, mainboard)
 
 
 def generate_revealed_boxes_data(val):

@@ -224,7 +224,8 @@ def draw_box_covers(display_surface, fps_clock, board, boxes, coverage):
     # of two-item lists, which have the x & y spot of the box
     for box in boxes:
         left, top = left_top_coords_of_box(box[0], box[1])
-        pygame.draw.rect(display_surface, BGCOLOR, (left, top, BOXSIZE, BOXSIZE))
+        pygame.draw.rect(display_surface, BGCOLOR,
+                         (left, top, BOXSIZE, BOXSIZE))
         shape, color = get_shape_and_color(board, box[0], box[1])
         draw_icon(display_surface, shape, color, box[0], box[1])
         if coverage > 0:  # only draw the cover if there is an coverage
@@ -238,13 +239,15 @@ def reveal_boxes_animation(display_surface, fps_clock, board, boxes_to_reveal):
     """Reveal Boxes Animation."""
     # Do the "box reveal" animation
     for coverage in range(BOXSIZE, (-REVEALSPEED) - 1, -REVEALSPEED):
-        draw_box_covers(display_surface, fps_clock, board, boxes_to_reveal, coverage)
+        draw_box_covers(display_surface, fps_clock, board, boxes_to_reveal,
+                        coverage)
 
 
 def cover_boxes_animation(display_surface, fps_clock, board, boxes_to_cover):
     """Do the box cover animation."""
     for coverage in range(0, BOXSIZE + REVEALSPEED, REVEALSPEED):
-        draw_box_covers(display_surface, fps_clock, board, boxes_to_cover, coverage)
+        draw_box_covers(display_surface, fps_clock, board, boxes_to_cover,
+                        coverage)
 
 
 def draw_board(display_surface, board, revealed):

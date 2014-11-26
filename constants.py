@@ -1,7 +1,7 @@
 """Constants used by the Memory Puzzle Game."""
 
-GAME_ROWS = 7
-GAME_COLS = 10
+GAME_ROWS = 4
+GAME_COLS = 5
 
 # size of box height and width in pixels
 BOXSIZE = 40

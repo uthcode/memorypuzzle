@@ -122,6 +122,27 @@ def game_loop(display_surface, fps_clock, mainboard):
         fps_clock.tick(FPS)
 
 
+def welcome_screen(display_surface, fps_clock):
+    box_width = WINDOWWIDTH / 2
+    box_height = WINDOWHEIGHT / 6
+    left = WINDOWWIDTH / 4
+    top = WINDOWHEIGHT / 4
+
+    easy_rect = ((left, top), (box_width, box_height))
+    medium_rect = ((left, top + box_height), (box_width, box_height))
+    hard_rect = ((left, top + box_height * 2), (box_width, box_height))
+
+    while True:
+        pygame.draw.rect(display_surface, (255, 0, 255), easy_rect, 3)
+        display_surface.fill((255, 0, 255), easy_rect)
+        pygame.draw.rect(display_surface, (255, 0, 0), medium_rect, 3)
+        display_surface.fill((255, 0, 0), medium_rect)
+        pygame.draw.rect(display_surface, (0, 0, 255), hard_rect, 3)
+        display_surface.fill((0, 0, 255), hard_rect)
+        pygame.display.update()
+        fps_clock.tick(FPS)
+
+
 def main():
     """Run the Memory Puzzle Game."""
     pygame.init()
@@ -129,6 +150,8 @@ def main():
     fps_clock, display_surface = get_clock_and_display()
     mainboard = get_randomized_board()
     display_surface.fill(BGCOLOR)
+    # Display the start screen
+    welcome_screen(display_surface, fps_clock)
     start_game_animation(display_surface, fps_clock, mainboard)
     game_loop(display_surface, fps_clock, mainboard)
 
@@ -246,7 +269,7 @@ def draw_box_covers(display_surface, fps_clock, board, boxes, coverage):
 def reveal_boxes_animation(display_surface, fps_clock, board, boxes_to_reveal):
     """Reveal Boxes Animation."""
     # Do the "box reveal" animation
-    for coverage in range(BOXSIZE, (-REVEALSPEED) - 1, -REVEALSPEED):
+    for coverage in range(BOXSIZE, -1, -REVEALSPEED):
         draw_box_covers(display_surface, fps_clock, board, boxes_to_reveal,
                         coverage)
 
@@ -293,7 +316,7 @@ def start_game_animation(display_surface, fps_clock, board):
     draw_board(display_surface, board, covered_boxes)
     for box_group in box_groups:
         reveal_boxes_animation(display_surface, fps_clock, board, box_group)
-        # cover_boxes_animation(display_surface, fps_clock, board, box_group)
+        cover_boxes_animation(display_surface, fps_clock, board, box_group)
 
 
 def game_won_animation(display_surface, board):

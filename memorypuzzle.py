@@ -132,13 +132,35 @@ def welcome_screen(display_surface, fps_clock):
     medium_rect = ((left, top + box_height), (box_width, box_height))
     hard_rect = ((left, top + box_height * 2), (box_width, box_height))
 
+    font = pygame.font.Font(None, 60)
+
+    easy_surf = font.render("Easy", True, (0, 0, 0))
+    medium_surf = font.render("Medium", True, (0, 0, 0))
+    hard_surf = font.render("Hard", True, (0, 0, 0))
+
+
     while True:
+        mouse_clicked, mouse_xpos, mouse_ypos = get_mouse_click()
         pygame.draw.rect(display_surface, (255, 0, 255), easy_rect, 3)
         display_surface.fill((255, 0, 255), easy_rect)
+        display_surface.blit(easy_surf, (left + left / 2, top + top / 4))
         pygame.draw.rect(display_surface, (255, 0, 0), medium_rect, 3)
         display_surface.fill((255, 0, 0), medium_rect)
+        display_surface.blit(medium_surf,
+                             (left + left / 2, top + top / 4 + box_height))
         pygame.draw.rect(display_surface, (0, 0, 255), hard_rect, 3)
         display_surface.fill((0, 0, 255), hard_rect)
+        display_surface.blit(hard_surf,
+                             (left + left / 2, top + top / 4 + box_height * 2))
+
+        if mouse_clicked == True:
+            if pygame.Rect(easy_rect).collidepoint(mouse_xpos, mouse_ypos):
+                break
+            elif pygame.Rect(medium_rect).collidepoint(mouse_xpos, mouse_ypos):
+                break
+            elif pygame.Rect(hard_rect).collidepoint(mouse_xpos, mouse_ypos):
+                break
+
         pygame.display.update()
         fps_clock.tick(FPS)
 

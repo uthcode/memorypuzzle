@@ -26,8 +26,13 @@ ALLCOLORS = (RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, CYAN)
 ALLSHAPES = (DONUT, SQUARE, DIAMOND, LINES, OVAL)
 
 
-def get_clock_and_display():
-    """Get the Frames per second clock and Display Surface."""
+def get_game_clock_display():
+    """Initial pygame and return clock and display.
+
+    Return frames per second clock and Display Surface of the pygame.
+    """
+    pygame.init()
+    pygame.display.set_caption("Memory Game")
     return pygame.time.Clock(), \
            pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
 
@@ -138,6 +143,9 @@ def welcome_screen(display_surface, fps_clock):
     medium_surf = font.render("Medium", True, (0, 0, 0))
     hard_surf = font.render("Hard", True, (0, 0, 0))
 
+    global GAME_ROWS, GAME_COLS, XMARGIN, YMARGIN
+
+    display_surface.fill(BGCOLOR)
 
     while True:
         mouse_clicked, mouse_xpos, mouse_ypos = get_mouse_click()
@@ -155,11 +163,19 @@ def welcome_screen(display_surface, fps_clock):
 
         if mouse_clicked == True:
             if pygame.Rect(easy_rect).collidepoint(mouse_xpos, mouse_ypos):
-                break
+                GAME_ROWS = 4
+                GAME_COLS = 5
             elif pygame.Rect(medium_rect).collidepoint(mouse_xpos, mouse_ypos):
-                break
+                GAME_ROWS = 6
+                GAME_COLS = 6
             elif pygame.Rect(hard_rect).collidepoint(mouse_xpos, mouse_ypos):
-                break
+                GAME_ROWS = 7
+                GAME_COLS = 10
+            XMARGIN = int((WINDOWWIDTH - (GAME_COLS * (BOXSIZE + GAPSIZE))) / 2)
+            YMARGIN = int(
+                (WINDOWHEIGHT - (GAME_ROWS * (BOXSIZE + GAPSIZE))) / 2)
+            display_surface.fill(BGCOLOR)
+            break
 
         pygame.display.update()
         fps_clock.tick(FPS)
@@ -167,13 +183,9 @@ def welcome_screen(display_surface, fps_clock):
 
 def main():
     """Run the Memory Puzzle Game."""
-    pygame.init()
-    pygame.display.set_caption("Memory Game")
-    fps_clock, display_surface = get_clock_and_display()
-    mainboard = get_randomized_board()
-    display_surface.fill(BGCOLOR)
-    # Display the start screen
+    fps_clock, display_surface = get_game_clock_display()
     welcome_screen(display_surface, fps_clock)
+    mainboard = get_randomized_board()
     start_game_animation(display_surface, fps_clock, mainboard)
     game_loop(display_surface, fps_clock, mainboard)
 

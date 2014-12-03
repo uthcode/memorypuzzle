@@ -2,13 +2,8 @@ Desired Features
 ================
 
 * Write tests for the code and ensure coverage.
-* 3 Levels. Easy, Medium and Difficult.
 * Reveal boards at random intervals.
 * Time Count and scores
 * Music
 * Package and Release it for Mac, Linux and Windows.
 * A named tuple for box(x,y) will be better.
-
-Questions
-=========
-* Should the board be even board or odd boards are okay?

@@ -81,7 +81,7 @@ def game_won(display_surface, fps_clock, mainboard):
     game_won_animation(display_surface, mainboard)
     pygame.time.wait(2000)
     # Reset the board
-    welcome_screen(display_surface, fps_clock)
+    display_welcome_screen(display_surface, fps_clock)
     mainboard = get_randomized_board()
     revealed_boxes = generate_revealed_boxes_data(False)
     # Show the fully unrevealed board for a second
@@ -112,62 +112,70 @@ def get_mouse_click():
     return mouse_clicked, mouse_xpos, mouse_ypos
 
 
-def game_loop(display_surface, fps_clock, mainboard):
+def game_loop(display_surface, fps_clock):
     """The main loop of the game."""
-    revealed_boxes = generate_revealed_boxes_data(False)
     first_selection = None
+    has_game_started = False
 
     while True:
-        display_surface.fill(BGCOLOR)
-        draw_board(display_surface, mainboard, revealed_boxes)
-        mouse_clicked, mouse_xpos, mouse_ypos = get_mouse_click()
-        boxx, boxy = get_box_at_pixel(mouse_xpos, mouse_ypos)
-        if boxx is not None and boxy is not None:
-            # The mouse is currently over the box
-            if not revealed_boxes[boxx][boxy]:
-                draw_highlight_box(display_surface, boxx, boxy)
-            if not revealed_boxes[boxx][boxy] and mouse_clicked:
-                reveal_boxes_animation(
-                    display_surface,
-                    fps_clock,
-                    mainboard,
-                    [(boxx, boxy)])
-                revealed_boxes[boxx][boxy] = True  # Set the box as revealed.
-                if first_selection is None:
-                    first_selection = (boxx, boxy)
-                else:
-                    icon1shape, icon1color = \
-                        get_shape_and_color(mainboard,
-                                            first_selection[0],
-                                            first_selection[1])
-                    icon2shape, icon2color = \
-                        get_shape_and_color(mainboard,
-                                            boxx,
-                                            boxy)
-                    if icon1shape != icon2shape or icon1color != icon2color:
-                        # Icons do not match, Re-cover up both selections
-                        pygame.time.wait(1000)
-                        cover_boxes_animation(
-                            display_surface,
-                            fps_clock,
-                            mainboard,
-                            [(first_selection[0], first_selection[1]),
-                             (boxx, boxy)])
-                        revealed_boxes[first_selection[0]][
-                            first_selection[1]] = False
-                        revealed_boxes[boxx][boxy] = False
-                    elif has_won(revealed_boxes):
-                        # check if all pairs found.
-                        mainboard, revealed_boxes = game_won(display_surface,
-                                                             fps_clock,
-                                                             mainboard)
-                    first_selection = None
-        # Redraw the screen and wait for the clock tick
+        if not has_game_started:
+            display_welcome_screen(display_surface, fps_clock)
+            mainboard = get_randomized_board()
+            start_game_animation(display_surface, fps_clock, mainboard)
+        else:
+            revealed_boxes = generate_revealed_boxes_data(False)
+            display_surface.fill(BGCOLOR)
+            draw_board(display_surface, mainboard, revealed_boxes)
+            mouse_clicked, mouse_xpos, mouse_ypos = get_mouse_click()
+            boxx, boxy = get_box_at_pixel(mouse_xpos, mouse_ypos)
+            if boxx is not None and boxy is not None:
+                # The mouse is currently over the box
+                if not revealed_boxes[boxx][boxy]:
+                    draw_highlight_box(display_surface, boxx, boxy)
+                if not revealed_boxes[boxx][boxy] and mouse_clicked:
+                    reveal_boxes_animation(
+                        display_surface,
+                        fps_clock,
+                        mainboard,
+                        [(boxx, boxy)])
+                    revealed_boxes[boxx][
+                        boxy] = True  # Set the box as revealed.
+                    if first_selection is None:
+                        first_selection = (boxx, boxy)
+                    else:
+                        icon1shape, icon1color = \
+                            get_shape_and_color(mainboard,
+                                                first_selection[0],
+                                                first_selection[1])
+                        icon2shape, icon2color = \
+                            get_shape_and_color(mainboard,
+                                                boxx,
+                                                boxy)
+                        if icon1shape != icon2shape or icon1color != icon2color:
+                            # Icons do not match, Re-cover up both selections
+                            pygame.time.wait(1000)
+                            cover_boxes_animation(
+                                display_surface,
+                                fps_clock,
+                                mainboard,
+                                [(first_selection[0], first_selection[1]),
+                                 (boxx, boxy)])
+                            revealed_boxes[first_selection[0]][
+                                first_selection[1]] = False
+                            revealed_boxes[boxx][boxy] = False
+                        elif has_won(revealed_boxes):
+                            # check if all pairs found.
+                            mainboard, revealed_boxes = game_won(
+                                display_surface,
+                                fps_clock,
+                                mainboard)
+                        first_selection = None
+                        # Redraw the screen and wait for the clock tick
         pygame.display.update()
         fps_clock.tick(FPS)
 
 
-def welcome_screen(display_surface, fps_clock):
+def display_welcome_screen(display_surface, fps_clock):
     font = pygame.font.Font(None, FONT_SIZE)
 
     easy_surf = font.render("Easy", True, IVORY)
@@ -231,10 +239,7 @@ def get_randomized_board():
 def main():
     """Run the Memory Puzzle Game."""
     fps_clock, display_surface = get_game_clock_display()
-    welcome_screen(display_surface, fps_clock)
-    mainboard = get_randomized_board()
-    start_game_animation(display_surface, fps_clock, mainboard)
-    game_loop(display_surface, fps_clock, mainboard)
+    game_loop(display_surface, fps_clock)
 
 
 def generate_revealed_boxes_data(val):

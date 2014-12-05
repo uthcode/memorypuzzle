@@ -1,9 +1,17 @@
 Desired Features
 ================
 
+Version 1
+---------
 * Write tests for the code and ensure coverage.
+* Maintainable Code.
+* Package it.
+* github gh_pages.
+
+Version 2
+---------
+* Make it object oriented if suitable.
+* A named tuple for box(x,y) will be better.
 * Reveal boards at random intervals.
 * Time Count and scores
 * Music
-* Package and Release it for Mac, Linux and Windows.
-* A named tuple for box(x,y) will be better.

@@ -13,13 +13,47 @@ import sys
 import pygame
 from pygame.constants import QUIT, KEYUP, K_ESCAPE, MOUSEMOTION, MOUSEBUTTONUP
 
-from constants import (
-    GAME_ROWS, GAME_COLS, BOXSIZE, FPS, GAPSIZE, REVEALSPEED, WINDOWHEIGHT,
-    WINDOWWIDTH, XMARGIN, YMARGIN)
 from colors import (
-    BGCOLOR, RED, GREEN, YELLOW, BLUE, ORANGE, PURPLE, CYAN, LIGHTBGCOLOR,
-    BOXCOLOR, HIGHLIGHTCOLOR)
-from shapes import (DONUT, SQUARE, DIAMOND, LINES, OVAL)
+    BGCOLOR,
+    BLUE,
+    BOXCOLOR,
+    CYAN,
+    GREEN,
+    HIGHLIGHTCOLOR,
+    IVORY,
+    LIGHTBGCOLOR,
+    ORANGE,
+    PURPLE,
+    RED,
+    YELLOW)
+from constants import (
+    BOXSIZE,
+    EASY_GAME_COLS,
+    EASY_GAME_ROWS,
+    EASY_RECT,
+    EASY_TEXT_POS,
+    FPS,
+    FONT_SIZE,
+    GAME_COLS,
+    GAME_ROWS,
+    GAPSIZE,
+    HARD_GAME_COLS,
+    HARD_GAME_ROWS,
+    HARD_RECT,
+    HARD_TEXT_POS,
+    MEDIUM_GAME_COLS,
+    MEDIUM_GAME_ROWS,
+    MEDIUM_RECT,
+    MEDIUM_TEXT_POS,
+    REVEALSPEED,
+    WINDOWHEIGHT,
+    WINDOWWIDTH)
+from shapes import (
+    DIAMOND,
+    DONUT,
+    LINES,
+    OVAL,
+    SQUARE)
 
 
 ALLCOLORS = (RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, CYAN)
@@ -27,14 +61,19 @@ ALLSHAPES = (DONUT, SQUARE, DIAMOND, LINES, OVAL)
 
 
 def get_game_clock_display():
-    """Initial pygame and return clock and display.
+    """Initialize PyGame and return clock and display.
 
-    Return frames per second clock and Display Surface of the pygame.
+    Return frames per second clock and Display Surface of the PyGame.
     """
     pygame.init()
     pygame.display.set_caption("Memory Game")
-    return pygame.time.Clock(), \
-           pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+    return (pygame.time.Clock(),
+            pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT)))
+
+
+def get_xy_margins():
+    return (int((WINDOWWIDTH - (GAME_COLS * (BOXSIZE + GAPSIZE))) / 2),
+            int((WINDOWHEIGHT - (GAME_ROWS * (BOXSIZE + GAPSIZE))) / 2))
 
 
 def game_won(display_surface, fps_clock, mainboard):
@@ -42,6 +81,7 @@ def game_won(display_surface, fps_clock, mainboard):
     game_won_animation(display_surface, mainboard)
     pygame.time.wait(2000)
     # Reset the board
+    welcome_screen(display_surface, fps_clock)
     mainboard = get_randomized_board()
     revealed_boxes = generate_revealed_boxes_data(False)
     # Show the fully unrevealed board for a second
@@ -128,57 +168,64 @@ def game_loop(display_surface, fps_clock, mainboard):
 
 
 def welcome_screen(display_surface, fps_clock):
-    box_width = WINDOWWIDTH / 2
-    box_height = WINDOWHEIGHT / 6
-    left = WINDOWWIDTH / 4
-    top = WINDOWHEIGHT / 4
+    font = pygame.font.Font(None, FONT_SIZE)
 
-    easy_rect = ((left, top), (box_width, box_height))
-    medium_rect = ((left, top + box_height), (box_width, box_height))
-    hard_rect = ((left, top + box_height * 2), (box_width, box_height))
+    easy_surf = font.render("Easy", True, IVORY)
+    medium_surf = font.render("Medium", True, IVORY)
+    hard_surf = font.render("Hard", True, IVORY)
 
-    font = pygame.font.Font(None, 60)
-
-    easy_surf = font.render("Easy", True, (0, 0, 0))
-    medium_surf = font.render("Medium", True, (0, 0, 0))
-    hard_surf = font.render("Hard", True, (0, 0, 0))
-
-    global GAME_ROWS, GAME_COLS, XMARGIN, YMARGIN
+    global GAME_ROWS, GAME_COLS
 
     display_surface.fill(BGCOLOR)
 
     while True:
         mouse_clicked, mouse_xpos, mouse_ypos = get_mouse_click()
-        pygame.draw.rect(display_surface, (255, 0, 255), easy_rect, 3)
-        display_surface.fill((255, 0, 255), easy_rect)
-        display_surface.blit(easy_surf, (left + left / 2, top + top / 4))
-        pygame.draw.rect(display_surface, (255, 0, 0), medium_rect, 3)
-        display_surface.fill((255, 0, 0), medium_rect)
-        display_surface.blit(medium_surf,
-                             (left + left / 2, top + top / 4 + box_height))
-        pygame.draw.rect(display_surface, (0, 0, 255), hard_rect, 3)
-        display_surface.fill((0, 0, 255), hard_rect)
-        display_surface.blit(hard_surf,
-                             (left + left / 2, top + top / 4 + box_height * 2))
 
-        if mouse_clicked == True:
-            if pygame.Rect(easy_rect).collidepoint(mouse_xpos, mouse_ypos):
-                GAME_ROWS = 4
-                GAME_COLS = 5
-            elif pygame.Rect(medium_rect).collidepoint(mouse_xpos, mouse_ypos):
-                GAME_ROWS = 6
-                GAME_COLS = 6
-            elif pygame.Rect(hard_rect).collidepoint(mouse_xpos, mouse_ypos):
-                GAME_ROWS = 7
-                GAME_COLS = 10
-            XMARGIN = int((WINDOWWIDTH - (GAME_COLS * (BOXSIZE + GAPSIZE))) / 2)
-            YMARGIN = int(
-                (WINDOWHEIGHT - (GAME_ROWS * (BOXSIZE + GAPSIZE))) / 2)
+        pygame.draw.rect(display_surface, CYAN, EASY_RECT, 3)
+        display_surface.fill(CYAN, EASY_RECT)
+        display_surface.blit(easy_surf, EASY_TEXT_POS)
+
+        pygame.draw.rect(display_surface, ORANGE, MEDIUM_RECT, 3)
+        display_surface.fill(ORANGE, MEDIUM_RECT)
+        display_surface.blit(medium_surf, MEDIUM_TEXT_POS)
+
+        pygame.draw.rect(display_surface, PURPLE, HARD_RECT, 3)
+        display_surface.fill(PURPLE, HARD_RECT)
+        display_surface.blit(hard_surf, HARD_TEXT_POS)
+
+        if mouse_clicked:
+            if pygame.Rect(EASY_RECT).collidepoint(mouse_xpos, mouse_ypos):
+                GAME_ROWS, GAME_COLS = EASY_GAME_ROWS, EASY_GAME_COLS
+            elif pygame.Rect(MEDIUM_RECT).collidepoint(mouse_xpos, mouse_ypos):
+                GAME_ROWS, GAME_COLS = MEDIUM_GAME_ROWS, MEDIUM_GAME_COLS
+            elif pygame.Rect(HARD_RECT).collidepoint(mouse_xpos, mouse_ypos):
+                GAME_ROWS, GAME_COLS = HARD_GAME_ROWS, HARD_GAME_COLS
             display_surface.fill(BGCOLOR)
             break
 
         pygame.display.update()
         fps_clock.tick(FPS)
+
+
+def get_randomized_board():
+    """Get the Randomized Board.
+
+    Gets the list of every possible shape in every possible color
+    and then creates a board, a list of lists, with randomly placed icons.
+    """
+    icons = [(shape, color) for shape in ALLSHAPES for color in ALLCOLORS]
+    random.shuffle(icons)
+    num_icons_used = int(GAME_ROWS * GAME_COLS / 2)
+    icons = icons[:num_icons_used] * 2
+    random.shuffle(icons)
+
+    board = []
+    for x_value in range(GAME_COLS):
+        column_values = []
+        for y_value in range(GAME_ROWS):
+            column_values.append(icons.pop(0))
+        board.append(column_values)
+    return board
 
 
 def main():
@@ -201,25 +248,6 @@ def generate_revealed_boxes_data(val):
     return revealed_boxes
 
 
-def get_randomized_board():
-    """Get the Randomized Board."""
-    # Get a list of every possible shape in every possible color.
-    icons = [(shape, color) for shape in ALLSHAPES for color in ALLCOLORS]
-    random.shuffle(icons)
-    num_icons_used = int(GAME_ROWS * GAME_COLS / 2)
-    icons = icons[:num_icons_used] * 2
-    random.shuffle(icons)
-
-    # Create a board data structure with randomly placed icons
-    board = []
-    for x_value in range(GAME_COLS):
-        column_values = []
-        for y_value in range(GAME_ROWS):
-            column_values.append(icons.pop(0))
-        board.append(column_values)
-    return board
-
-
 def split_into_groups_of(group_size, the_list):
     """Split into Groups."""
     result = []
@@ -230,8 +258,9 @@ def split_into_groups_of(group_size, the_list):
 
 def left_top_coords_of_box(x_value, y_value):
     """Top left coordinates of a box."""
-    left = XMARGIN + x_value * (BOXSIZE + GAPSIZE)
-    top = YMARGIN + y_value * (BOXSIZE + GAPSIZE)
+    xmargin, ymargin = get_xy_margins()
+    left = xmargin + x_value * (BOXSIZE + GAPSIZE)
+    top = ymargin + y_value * (BOXSIZE + GAPSIZE)
     return left, top
 
 

@@ -45,7 +45,7 @@ from constants import (
     MEDIUM_TEXT_POS,
     REVEALSPEED,
     WINDOWHEIGHT,
-    WINDOWWIDTH)
+    WINDOWWIDTH, GAME_WON_FLASH_WAIT, GAME_END_WAIT, PIECE_CLOSE_WAIT)
 from shapes import (
     DIAMOND,
     DONUT,
@@ -62,6 +62,7 @@ def left_top_coords_of_box(box, game_grid):
     """Top left coordinates of a box."""
 
     def get_xy_margins(grid):
+        """Calculate the x, y margins of the grid."""
         game_rows, game_cols = grid
         return (int((WINDOWWIDTH - (game_cols * (BOXSIZE + GAPSIZE))) / 2),
                 int((WINDOWHEIGHT - (game_rows * (BOXSIZE + GAPSIZE))) / 2))
@@ -147,23 +148,17 @@ def draw_icon(display_surface, shape, color, box, game_grid):
 
 
 def game_won(display_surface, board, game_grid):
-    """Won the game.
+    """Game is won by the place.
 
     Flash the background color celebrating the players win."""
     covered_boxes = generate_revealed_boxes_data(board, game_grid)
-    color1 = LIGHTBGCOLOR
-    color2 = BGCOLOR
-    for _ in range(13):
-        color1, color2 = color2, color1
-        display_surface.fill(color1)
-        draw_board(
-            display_surface,
-            board,
-            covered_boxes,
-            game_grid)
+    flash_colors = [LIGHTBGCOLOR, BGCOLOR]
+    for count in range(10):
+        display_surface.fill(flash_colors[count % 2])
+        draw_board(display_surface, board, covered_boxes, game_grid)
         pygame.display.update()
-        pygame.time.wait(300)
-    pygame.time.wait(2000)
+        pygame.time.wait(GAME_WON_FLASH_WAIT)
+    pygame.time.wait(GAME_END_WAIT)
 
 
 def cover_boxes_animation(display_surface, fps_clock, board, boxes_to_cover,
@@ -199,7 +194,7 @@ def reveal_boxes_animation(display_surface, fps_clock, board, boxes_to_reveal,
 
 
 def draw_highlight_box(display_surface, box, game_grid):
-    """Draw the Highlight box."""
+    """Draw the highlight box."""
     left, top = left_top_coords_of_box(box, game_grid)
     pygame.draw.rect(
         display_surface,
@@ -209,9 +204,12 @@ def draw_highlight_box(display_surface, box, game_grid):
 
 
 def get_mouse_click():
+    """Gets the mouse click position.
+
+    Returns a tuple of if a mouse was clocked and the x, y coordinates."""
     mouse_clicked = False
-    mouse_xpos = 0  # used to store the x coordinate of the mouse event
-    mouse_ypos = 0  # used to store the y coordinate of the mouse event
+    mouse_xpos = 0
+    mouse_ypos = 0
     for event in pygame.event.get():  # event handling loop
         if (event.type == QUIT or
                 (event.type == KEYUP and event.key == K_ESCAPE)):
@@ -252,32 +250,28 @@ def draw_board(display_surface, board, revealed, game_grid):
 def generate_revealed_boxes_data(val, game_grid):
     """Generate Revealed Boxes Data."""
     game_rows, game_cols = game_grid
-    revealed_boxes = []
-    for x_value in range(game_cols):
-        column_values = []
-        for y_value in range(game_rows):
-            column_values.append(val)
-        revealed_boxes.append(column_values)
+    revealed_boxes = [[val for _ in range(game_rows)] for _ in range(game_cols)]
     return revealed_boxes
 
 
 def start_game_animation(display_surface, fps_clock, board, game_grid):
-    """Randomly reveal the boxes 8 at a time."""
+    """Starts the Game opening animation.
 
+    Randomly reveals the boxes 8 box at a time.
+    """
     game_rows, game_cols = game_grid
 
     def split_into_groups_of(group_size, the_list):
-        """Split into Groups."""
+        """Splits the list into the given group size."""
         result = []
         for cut in range(0, len(the_list), group_size):
             result.append(the_list[cut:cut + group_size])
         return result
 
     covered_boxes = generate_revealed_boxes_data(False, game_grid)
-    boxes = []
-    for x_value in range(game_cols):
-        for y_value in range(game_rows):
-            boxes.append((x_value, y_value))
+    boxes = [(x_value, y_value)
+             for y_value in range(game_rows)
+             for x_value in range(game_cols)]
     random.shuffle(boxes)
     box_groups = split_into_groups_of(8, boxes)
 
@@ -298,18 +292,17 @@ def start_game_animation(display_surface, fps_clock, board, game_grid):
 
 
 def get_game_level(display_surface, fps_clock):
-    font = pygame.font.Font(None, FONT_SIZE)
+    """Get the game level desired by the user."""
 
-    easy_surf = font.render("Easy", True, IVORY)
-    medium_surf = font.render("Medium", True, IVORY)
-    hard_surf = font.render("Hard", True, IVORY)
+    def draw_welcome_screen():
+        """Display the welcome and the three game levels."""
+        font = pygame.font.Font(None, FONT_SIZE)
 
-    display_surface.fill(BGCOLOR)
-
-    while True:
-        mouse_clicked, mouse_pointer = get_mouse_click()
-
+        easy_surf = font.render("Easy", True, IVORY)
+        medium_surf = font.render("Medium", True, IVORY)
+        hard_surf = font.render("Hard", True, IVORY)
         pygame.draw.rect(display_surface, CYAN, EASY_RECT, 3)
+
         display_surface.fill(CYAN, EASY_RECT)
         display_surface.blit(easy_surf, EASY_TEXT_POS)
 
@@ -320,6 +313,10 @@ def get_game_level(display_surface, fps_clock):
         pygame.draw.rect(display_surface, PURPLE, HARD_RECT, 3)
         display_surface.fill(PURPLE, HARD_RECT)
         display_surface.blit(hard_surf, HARD_TEXT_POS)
+
+    while True:
+        mouse_clicked, mouse_pointer = get_mouse_click()
+        draw_welcome_screen()
 
         if mouse_clicked:
             display_surface.fill(BGCOLOR)
@@ -335,10 +332,17 @@ def get_game_level(display_surface, fps_clock):
 
 
 def game_loop(display_surface, fps_clock):
-    """The main loop of the game."""
+    """Game loop encodes the logic of the game.
+
+    During the game starts, prompts the player to choose the level and
+    determines the game board size based on the level chosen. If two selections
+    chosen by user are same, the boxes are left open, else they are closed.
+    When all the chosen selections are open,  the game is won by the user and
+    the game is reset.
+    """
 
     def player_has_won(revealed):
-        """Game is won when all boxes are revealed, that is set to True."""
+        """Game is won when all boxes are revealed."""
         return all([all(boxes) for boxes in revealed])
 
     def get_randomized_board(grid):
@@ -354,16 +358,12 @@ def game_loop(display_surface, fps_clock):
         icons = icons[:num_icons_used] * 2
         random.shuffle(icons)
 
-        game_board = []
-        for x_value in range(game_cols):
-            column_values = []
-            for y_value in range(game_rows):
-                column_values.append(icons.pop(0))
-            game_board.append(column_values)
+        game_board = [[icons.pop(0) for _ in range(game_rows)]
+                      for _ in range(game_cols)]
         return game_board
 
     def get_box_under_mouse(pointer, grid):
-        """Get the Box at a Pixel."""
+        """Get the box at a pixel."""
         game_rows, game_cols = grid
         mouse_over = False
         for boxx in range(game_cols):
@@ -376,10 +376,12 @@ def game_loop(display_surface, fps_clock):
         return mouse_over, (None, None)
 
     def is_box_revealed(revealed, selected_box):
+        """Returns the status of the box."""
         box_x, box_y = selected_box
         return revealed[box_x][box_y]
 
     def set_box_revealed(revealed, selected_box, status):
+        """Sets the revealed status of the box."""
         box_x, box_y = selected_box
         revealed[box_x][box_y] = status
         return revealed
@@ -418,7 +420,7 @@ def game_loop(display_surface, fps_clock):
                             first_selection)
                         second_piece = get_shape_and_color(board, box)
                         if first_piece != second_piece:
-                            pygame.time.wait(1000)
+                            pygame.time.wait(PIECE_CLOSE_WAIT)
                             cover_boxes_animation(
                                 display_surface,
                                 fps_clock,
@@ -443,9 +445,9 @@ def game_loop(display_surface, fps_clock):
 
 
 def get_game_clock_display():
-    """Initialize PyGame and return clock and display.
+    """Initialize pygame and return clock and display.
 
-    Return frames per second clock and Display Surface of the PyGame.
+    Return frames per second clock and Display Surface of the pygame.
     """
     pygame.init()
     pygame.display.set_caption("Memory Game")
@@ -454,6 +456,10 @@ def get_game_clock_display():
 
 
 def main():
+    """Memory puzzle game.
+
+    Gets the clock and display surface and hands it over the game loop.
+    """
     fps_clock, display_surface = get_game_clock_display()
     game_loop(display_surface, fps_clock)
 

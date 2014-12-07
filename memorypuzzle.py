@@ -187,8 +187,7 @@ def get_shape_and_color(board, box):
 
 def reveal_boxes_animation(display_surface, fps_clock, board, boxes_to_reveal,
                            game_grid):
-    """Reveal Boxes Animation."""
-    # Do the "box reveal" animation
+    """Do the box reveal animation."""
     for coverage in range(BOXSIZE, -1, -REVEALSPEED):
         draw_box_covers(
             display_surface,
@@ -207,18 +206,6 @@ def draw_highlight_box(display_surface, box, game_grid):
         HIGHLIGHTCOLOR,
         (left - 5, top - 5, BOXSIZE + 10, BOXSIZE + 10),
         4)
-
-
-def get_box_relative_to_grid(mouse_pointer, game_grid):
-    """Get the Box at a Pixel."""
-    game_rows, game_cols = game_grid
-    for boxx in range(game_cols):
-        for boxy in range(game_rows):
-            left, top = left_top_coords_of_box((boxx, boxy), game_grid)
-            box_rect = pygame.Rect(left, top, BOXSIZE, BOXSIZE)
-            if box_rect.collidepoint(mouse_pointer):
-                return boxx, boxy
-    return None, None
 
 
 def get_mouse_click():
@@ -310,7 +297,7 @@ def start_game_animation(display_surface, fps_clock, board, game_grid):
             game_grid)
 
 
-def display_welcome_screen(display_surface, fps_clock):
+def get_game_level(display_surface, fps_clock):
     font = pygame.font.Font(None, FONT_SIZE)
 
     easy_surf = font.render("Easy", True, IVORY)
@@ -349,8 +336,6 @@ def display_welcome_screen(display_surface, fps_clock):
 
 def game_loop(display_surface, fps_clock):
     """The main loop of the game."""
-    first_selection = None
-    game_started = False
 
     def player_has_won(revealed):
         """Game is won when all boxes are revealed, that is set to True."""
@@ -377,6 +362,19 @@ def game_loop(display_surface, fps_clock):
             game_board.append(column_values)
         return game_board
 
+    def get_box_under_mouse(pointer, grid):
+        """Get the Box at a Pixel."""
+        game_rows, game_cols = grid
+        mouse_over = False
+        for boxx in range(game_cols):
+            for boxy in range(game_rows):
+                left, top = left_top_coords_of_box((boxx, boxy), grid)
+                box_rect = pygame.Rect(left, top, BOXSIZE, BOXSIZE)
+                if box_rect.collidepoint(pointer):
+                    mouse_over = True
+                    return mouse_over, (boxx, boxy)
+        return mouse_over, (None, None)
+
     def is_box_revealed(revealed, selected_box):
         box_x, box_y = selected_box
         return revealed[box_x][box_y]
@@ -386,21 +384,23 @@ def game_loop(display_surface, fps_clock):
         revealed[box_x][box_y] = status
         return revealed
 
+    game_started = False
+    first_selection = None
+
     while True:
+        display_surface.fill(BGCOLOR)
         if not game_started:
-            game_grid = display_welcome_screen(display_surface, fps_clock)
+            game_grid = get_game_level(display_surface, fps_clock)
             board = get_randomized_board(game_grid)
             start_game_animation(display_surface, fps_clock, board, game_grid)
             revealed_boxes = generate_revealed_boxes_data(False, game_grid)
             game_started = True
         else:
-            display_surface.fill(BGCOLOR)
             draw_board(display_surface, board, revealed_boxes, game_grid)
             mouse_clicked, mouse_pointer = get_mouse_click()
-            box = get_box_relative_to_grid(mouse_pointer, game_grid)
-            if None not in box:
+            mouse_over_box, box = get_box_under_mouse(mouse_pointer, game_grid)
+            if mouse_over_box:
                 if not is_box_revealed(revealed_boxes, box):
-                    # The mouse is currently over the box
                     draw_highlight_box(display_surface, box, game_grid)
                 if not is_box_revealed(revealed_boxes, box) and mouse_clicked:
                     reveal_boxes_animation(
@@ -418,7 +418,6 @@ def game_loop(display_surface, fps_clock):
                             first_selection)
                         second_piece = get_shape_and_color(board, box)
                         if first_piece != second_piece:
-                            # Re-cover up both selections
                             pygame.time.wait(1000)
                             cover_boxes_animation(
                                 display_surface,
@@ -438,7 +437,7 @@ def game_loop(display_surface, fps_clock):
                             game_won(display_surface, board, game_grid)
                             game_started = False
                         first_selection = None
-        # Redraw the screen and wait for the clock tick
+
         pygame.display.update()
         fps_clock.tick(FPS)
 

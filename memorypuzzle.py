@@ -45,7 +45,8 @@ from constants import (
     MEDIUM_TEXT_POS,
     REVEALSPEED,
     WINDOWHEIGHT,
-    WINDOWWIDTH, GAME_WON_FLASH_WAIT, GAME_END_WAIT, PIECE_CLOSE_WAIT)
+    WINDOWWIDTH, GAME_WON_FLASH_WAIT, GAME_END_WAIT, PIECE_CLOSE_WAIT,
+    QUARTER_BOXSIZE, HALF_BOXSIZE)
 from shapes import (
     DIAMOND,
     DONUT,
@@ -99,8 +100,6 @@ def draw_box_covers(display_surface, fps_clock, board, boxes, coverage,
 
 def draw_icon(display_surface, shape, color, box, game_grid):
     """Draw icon of the piece."""
-    quarter = int(BOXSIZE * 0.25)
-    half = int(BOXSIZE * 0.5)
     left, top = left_top_coords_of_box(box, game_grid)
 
     # Draw the shapes
@@ -108,26 +107,29 @@ def draw_icon(display_surface, shape, color, box, game_grid):
         pygame.draw.circle(
             display_surface,
             color,
-            (left + half, top + half),
-            half - 5)
+            (left + HALF_BOXSIZE, top + HALF_BOXSIZE),
+            HALF_BOXSIZE - 5)
         pygame.draw.circle(
             display_surface,
             BGCOLOR,
-            (left + half, top + half),
-            quarter - 5)
+            (left + HALF_BOXSIZE, top + HALF_BOXSIZE),
+            QUARTER_BOXSIZE - 5)
     elif shape == SQUARE:
         pygame.draw.rect(
             display_surface,
             color,
-            (left + quarter, top + quarter, BOXSIZE - half, BOXSIZE - half))
+            (left + QUARTER_BOXSIZE,
+             top + QUARTER_BOXSIZE,
+             BOXSIZE - HALF_BOXSIZE,
+             BOXSIZE - HALF_BOXSIZE))
     elif shape == DIAMOND:
         pygame.draw.polygon(
             display_surface,
             color,
-            ((left + half, top),
-             (left + BOXSIZE - 1, top + half),
-             (left + half, top + BOXSIZE - 1),
-             (left, top + half)))
+            ((left + HALF_BOXSIZE, top),
+             (left + BOXSIZE - 1, top + HALF_BOXSIZE),
+             (left + HALF_BOXSIZE, top + BOXSIZE - 1),
+             (left, top + HALF_BOXSIZE)))
     elif shape == LINES:
         for i in range(0, BOXSIZE, 4):
             pygame.draw.line(
@@ -144,14 +146,14 @@ def draw_icon(display_surface, shape, color, box, game_grid):
         pygame.draw.ellipse(
             display_surface,
             color,
-            (left, top + quarter, BOXSIZE, half))
+            (left, top + QUARTER_BOXSIZE, BOXSIZE, HALF_BOXSIZE))
 
 
 def game_won(display_surface, board, game_grid):
     """Game is won by the place.
 
     Flash the background color celebrating the players win."""
-    covered_boxes = generate_revealed_boxes_data(board, game_grid)
+    covered_boxes = generate_revealed_boxes_data(True, game_grid)
     flash_colors = [LIGHTBGCOLOR, BGCOLOR]
     for count in range(10):
         display_surface.fill(flash_colors[count % 2])
@@ -394,6 +396,7 @@ def game_loop(display_surface, fps_clock):
         if not game_started:
             game_grid = get_game_level(display_surface, fps_clock)
             board = get_randomized_board(game_grid)
+            print board
             start_game_animation(display_surface, fps_clock, board, game_grid)
             revealed_boxes = generate_revealed_boxes_data(False, game_grid)
             game_started = True

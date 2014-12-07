@@ -14,6 +14,8 @@ HARD_GAME_COLS = 10
 
 # size of box height and width in pixels
 BOXSIZE = 40
+QUARTER_BOXSIZE = int(BOXSIZE * 0.25)
+HALF_BOXSIZE = int(BOXSIZE * 0.5)
 
 # Frames per second, the general speed of the program.
 FPS = 20

@@ -399,7 +399,13 @@ class TestGame(unittest.TestCase):
             memorypuzzle.get_game_level(display_surface, fps_clock))
         memorypuzzle.get_mouse_click.assert_called_once_with()
 
-    def test_game_loop(self):
-        display_surface = MagicMock()
-        fps_clock = MagicMock()
+    @mock.patch("memorypuzzle.game_loop", MagicMock())
+    @mock.patch(
+        "memorypuzzle.get_game_clock_display",
+        MagicMock(return_value=(mock.ANY, mock.ANY)))
+    def test_main(self):
+        memorypuzzle.main()
+        fps, clock = memorypuzzle.get_game_clock_display()
+        memorypuzzle.game_loop.assert_called_with(fps, clock)
+
 

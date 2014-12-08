@@ -396,7 +396,6 @@ def game_loop(display_surface, fps_clock):
         if not game_started:
             game_grid = get_game_level(display_surface, fps_clock)
             board = get_randomized_board(game_grid)
-            print board
             start_game_animation(display_surface, fps_clock, board, game_grid)
             revealed_boxes = generate_revealed_boxes_data(False, game_grid)
             game_started = True

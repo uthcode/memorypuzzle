@@ -38,7 +38,7 @@ from constants import (
     REVEALSPEED,
     WINDOWHEIGHT,
     WINDOWWIDTH, HALF_BOXSIZE, QUARTER_BOXSIZE, GAME_WON_FLASH_WAIT,
-    GAME_END_WAIT)
+    GAME_END_WAIT, EASY_RECT)
 from shapes import (
     DIAMOND,
     DONUT,
@@ -154,6 +154,7 @@ class TestGame(unittest.TestCase):
             LEFT_TOP_COORDS_OF_TEST_BOX,
             "Coordinates Differ From the calculated expected Value.")
 
+    @mock.patch("memorypuzzle.draw_icon", MagicMock())
     def test_draw_box_covers(self):
         pygame.draw = MagicMock()
         pygame.display = MagicMock()
@@ -168,20 +169,18 @@ class TestGame(unittest.TestCase):
             10,
             TEST_GRID)
 
-        # TODO: How to assert the intermediaries with mock?
-        # pygame.draw.rect.assert_called_with(
-        # display_surface, BGCOLOR, (left, top, BOXSIZE, BOXSIZE))
-        # shape = DONUT
-        # color = RED
-        # quarter = int(BOXSIZE * 0.25)
-        # half = int(BOXSIZE * 0.5)
-        # pygame.draw.circle.assert_called_with(
-        # display_surface, color, (left + half, top + half), (half - 5))
-        # pygame.draw.circle.assert_called_with(
-        #    display_surface, BGCOLOR, (left + half, top + half), quarter - 5)
-
-        pygame.draw.rect.assert_called_with(
-            display_surface, BOXCOLOR, (left, top, 10, BOXSIZE))
+        expected_draw_rect = [
+            mock.call(display_surface, BGCOLOR, (left, top, BOXSIZE, BOXSIZE)),
+            mock.call(display_surface, BOXCOLOR, (left, top, 10, BOXSIZE))
+        ]
+        self.assertEqual(expected_draw_rect,
+                         pygame.draw.rect.call_args_list)
+        memorypuzzle.draw_icon.assert_called_once_with(
+            display_surface,
+            LINES,
+            ORANGE,
+            TEST_BOX,
+            TEST_GRID)
         pygame.display.update.assert_called_once_with()
         fps_clock.tick.assert_called_once_with(FPS)
 
@@ -312,4 +311,95 @@ class TestGame(unittest.TestCase):
         self.assertEqual(
             (True, (100, 100)),
             memorypuzzle.get_mouse_click())
+
+    @mock.patch("memorypuzzle.draw_icon", MagicMock())
+    def test_draw_board(self):
+        display_surface = MagicMock()
+        pygame.draw = MagicMock()
+        rows, cols = TEST_GRID
+        revealed_boxes = memorypuzzle.generate_revealed_boxes_data(
+            False,
+            TEST_GRID)
+        expected_pygame_draw = [
+            mock.call(
+                display_surface,
+                BOXCOLOR,
+                (mock.ANY, mock.ANY, BOXSIZE, BOXSIZE),
+                3)
+            for _ in range(rows * cols)]
+        memorypuzzle.draw_board(
+            display_surface,
+            TEST_BOARD,
+            revealed_boxes,
+            TEST_GRID)
+        self.assertEqual(expected_pygame_draw, pygame.draw.rect.call_args_list)
+        revealed_boxes[0][0] = True
+        expected_pygame_draw.pop(0)
+        pygame.draw.rect.reset_mock()
+        expected_draw_icon = [
+            mock.call(display_surface, LINES, ORANGE, TEST_BOX, TEST_GRID)]
+        memorypuzzle.draw_board(
+            display_surface,
+            TEST_BOARD,
+            revealed_boxes,
+            TEST_GRID)
+        self.assertEqual(
+            len(expected_pygame_draw),
+            len(pygame.draw.rect.call_args_list))
+        self.assertEqual(
+            expected_draw_icon,
+            memorypuzzle.draw_icon.call_args_list)
+
+    def test_generate_revealed_boxes_data(self):
+        table = memorypuzzle.generate_revealed_boxes_data(True, TEST_GRID)
+        self.assertTrue(all(all(rows) for rows in table))
+
+    @mock.patch("memorypuzzle.draw_board", MagicMock())
+    @mock.patch("memorypuzzle.reveal_boxes_animation", MagicMock())
+    @mock.patch("memorypuzzle.cover_boxes_animation", MagicMock())
+    def test_start_game_animation(self):
+        display_surface = MagicMock()
+        fps_clock = MagicMock()
+        covered_boxes = memorypuzzle.generate_revealed_boxes_data(
+            False,
+            TEST_GRID)
+        expected_revealed_boxes_animation = [
+            mock.call(display_surface, fps_clock, TEST_BOARD, mock.ANY,
+                      TEST_GRID)
+            for _ in range(3)]
+        expected_cover_boxes_animation = [
+            mock.call(display_surface, fps_clock, TEST_BOARD, mock.ANY,
+                      TEST_GRID)
+            for _ in range(3)]
+        memorypuzzle.start_game_animation(
+            display_surface,
+            fps_clock,
+            TEST_BOARD,
+            TEST_GRID)
+        self.assertEqual(
+            [mock.call(display_surface, TEST_BOARD, covered_boxes, TEST_GRID)],
+            memorypuzzle.draw_board.call_args_list)
+        self.assertEqual(
+            expected_revealed_boxes_animation,
+            memorypuzzle.reveal_boxes_animation.call_args_list)
+        self.assertEqual(
+            expected_cover_boxes_animation,
+            memorypuzzle.cover_boxes_animation.call_args_list)
+
+    @mock.patch("memorypuzzle.get_mouse_click", MagicMock())
+    def test_game_level(self):
+        display_surface = MagicMock()
+        fps_clock = MagicMock()
+        pygame.Rect = MagicMock()
+        pygame.font = MagicMock()
+        memorypuzzle.get_mouse_click.return_value = (True, mock.ANY)
+        pygame.Rect(EASY_RECT).collidepoint.return_value = True
+        self.assertEqual(
+            (EASY_GAME_ROWS, EASY_GAME_COLS),
+            memorypuzzle.get_game_level(display_surface, fps_clock))
+        memorypuzzle.get_mouse_click.assert_called_once_with()
+
+    def test_game_loop(self):
+        display_surface = MagicMock()
+        fps_clock = MagicMock()
 

@@ -10,6 +10,7 @@ Game Site
 
 http://uthcode.github.io/memorypuzzle/
 
+My aim for writing this game was write code which will live for a long time. The emphasis is modular code with excellent test coverage.
 
 Requirements
 ============
